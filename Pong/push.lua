@@ -218,7 +218,7 @@ function push:finish(shader)
 
 		--draw render
 		love.graphics.translate(self._OFFSET.x, self._OFFSET.y)
-		local shader = shader or _render.shader
+		local _ = shader or _render.shader
 		love.graphics.push()
 		love.graphics.scale(self._SCALE.x, self._SCALE.y)
 		self:applyShaders(_render.canvas, type(shader) == "table" and shader or { shader })
