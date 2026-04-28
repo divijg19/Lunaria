@@ -3,33 +3,43 @@ local Map = require("core.map")
 local Game = {}
 
 function Game:new()
-    local obj = {
-        map = Map.create(20, 10),
-        player = { x = 2, y = 2, hp = 10 }
-    }
+	local obj = {
+		map = Map.create(20, 10),
+		player = { x = 2, y = 2, hp = 10 },
+	}
 
-    setmetatable(obj, self)
-    self.__index = self
-    return obj
+	setmetatable(obj, self)
+	self.__index = self
+	return obj
 end
 
 function Game:update(action)
-    if action == "up" then
-        self.player.y = self.player.y - 1
-    elseif action == "down" then
-        self.player.y = self.player.y + 1
-    elseif action == "left" then
-        self.player.x = self.player.x - 1
-    elseif action == "right" then
-        self.player.x = self.player.x + 1
-    end
+	local dx, dy = 0, 0
+
+	if action == "up" then
+		dy = -1
+	elseif action == "down" then
+		dy = 1
+	elseif action == "left" then
+		dx = -1
+	elseif action == "right" then
+		dx = 1
+	end
+
+	local nx = self.player.x + dx
+	local ny = self.player.y + dy
+
+	if self.map[ny] and self.map[ny][nx] ~= "#" then
+		self.player.x = nx
+		self.player.y = ny
+	end
 end
 
 function Game:get_draw_data()
-    return {
-        map = self.map,
-        player = self.player
-    }
+	return {
+		map = self.map,
+		player = self.player,
+	}
 end
 
 return Game
