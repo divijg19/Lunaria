@@ -8,10 +8,8 @@ local input = require("input.terminal")
 local game = Game:new()
 
 while true do
-    renderer.draw(game:get_draw_data())
+	renderer.draw(game:get_draw_data())
 
-    local action = input.get_action()
-    if action then
-        game:update(action)
-    end
+	local action = input.get_action()
+	game:update(action)
 end

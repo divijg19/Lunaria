@@ -14,6 +14,11 @@ function Game:new()
 end
 
 function Game:update(action)
+	self:player_turn(action)
+	self:world_turn()
+end
+
+function Game:player_turn(action)
 	local dx, dy = 0, 0
 
 	if action == "up" then
@@ -33,6 +38,10 @@ function Game:update(action)
 		self.player.x = nx
 		self.player.y = ny
 	end
+end
+
+function Game:world_turn()
+	-- placeholder for enemies, systems, etc.
 end
 
 function Game:get_draw_data()
