@@ -16,14 +16,28 @@ function Game:new()
 		},
 	}
 
+	log = "Welcome."
+	is_game_over = false
+
 	setmetatable(obj, self)
 	self.__index = self
 	return obj
 end
 
 function Game:update(action)
+	if self.is_game_over then
+		return
+	end
+
+	self.log = "" --reset per turn
+
 	self:player_turn(action)
 	self:world_turn()
+
+	if self.player.hp <= 0 then
+		self.is_game_over = true
+		self.log = "You died."
+	end
 end
 
 function Game:player_turn(action)
@@ -34,6 +48,7 @@ function Game:player_turn(action)
 
 	-- combat first
 	if combat.player_vs_enemy(self, nx, ny) then
+		self.log = "You hit an enemy."
 		return
 	end
 
@@ -48,8 +63,14 @@ function Game:world_turn()
 
 		if e.hp <= 0 then
 			table.remove(self.enemies, i)
+			self.log = "Enemy defeated."
 		else
+			local before_hp = self.player.hp
 			ai.enemy_turn(self, e)
+
+			if self.player.hp < before_hp then
+				self.log = "Enemy hit you."
+			end
 		end
 	end
 end
@@ -100,6 +121,8 @@ function Game:get_draw_data()
 		map = self.map,
 		player = self.player,
 		enemies = self.enemies,
+		log = self.log,
+		is_game_over = self.is_game_over,
 	}
 end
 

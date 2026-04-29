@@ -28,9 +28,13 @@ function M.draw(state)
 			end
 		end
 		print()
+		if state.is_game_over then
+			print("\n=== GAME OVER ===")
+		end
 	end
 
-	print("HP:", state.player.hp)
+	print("HP:", state.player.hp, " | Enemies:", #(state.enemies or {}))
+	print(state.log or "")
 end
 
 return M
