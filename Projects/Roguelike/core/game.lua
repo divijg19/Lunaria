@@ -1,3 +1,6 @@
+local movement = require("systems.movement")
+local combat = require("systems.combat")
+local ai = require("systems.ai")
 local Map = require("core.map")
 
 local Game = {}
@@ -24,34 +27,13 @@ function Game:update(action)
 end
 
 function Game:player_turn(action)
-	if not action then
+	local nx, ny = movement.player(self, action)
+	if not nx then
 		return
 	end
 
-	local dx, dy = 0, 0
-
-	if action == "up" then
-		dy = -1
-	elseif action == "down" then
-		dy = 1
-	elseif action == "left" then
-		dx = -1
-	elseif action == "right" then
-		dx = 1
-	end
-
-	local nx = self.player.x + dx
-	local ny = self.player.y + dy
-
-	-- wall check
-	if not (self.map[ny] and self.map[ny][nx] ~= "#") then
-		return
-	end
-
-	-- enemy check (combat)
-	local enemy = self:get_enemy_at(nx, ny)
-	if enemy then
-		enemy.hp = enemy.hp - 1
+	-- combat first
+	if combat.player_vs_enemy(self, nx, ny) then
 		return
 	end
 
@@ -61,11 +43,13 @@ function Game:player_turn(action)
 end
 
 function Game:world_turn()
-	for i, e in ipairs(self.enemies) do
+	for i = #self.enemies, 1, -1 do
+		local e = self.enemies[i]
+
 		if e.hp <= 0 then
 			table.remove(self.enemies, i)
 		else
-			self:enemy_act(e)
+			ai.enemy_turn(self, e)
 		end
 	end
 end
