@@ -6,17 +6,10 @@ function love.keypressed(key)
 	last_key = key
 end
 
-function M.get_action()
-	local map = {
-		w = "up",
-		s = "down",
-		a = "left",
-		d = "right",
-	}
-
-	local action = map[last_key]
+function M.get_key()
+	local key = last_key
 	last_key = nil
-	return action
+	return key
 end
 
 return M
