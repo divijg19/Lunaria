@@ -9,19 +9,20 @@ local ai = require("systems.ai")
 local Game = {}
 
 function Game:new()
+	local map, rooms = Map.create(40, 40)
+
+	local spawn = rooms[1]
+
 	local obj = {
-		map = Map.create(20, 10),
+		map = map,
 
 		player = {
-			x = 2,
-			y = 2,
+			x = spawn.x,
+			y = spawn.y,
 			hp = 10,
 		},
 
-		enemies = {
-			{ x = 5, y = 5, hp = 3 },
-			{ x = 10, y = 6, hp = 3 },
-		},
+		enemies = {},
 
 		state = State:new("explore"),
 
@@ -35,6 +36,17 @@ function Game:new()
 
 		is_game_over = false,
 	}
+
+	-- place enemies in random rooms
+	for i = 2, #rooms do
+		local room = rooms[i]
+
+		table.insert(obj.enemies, {
+			x = room.x,
+			y = room.y,
+			hp = 3,
+		})
+	end
 
 	setmetatable(obj, self)
 	self.__index = self
