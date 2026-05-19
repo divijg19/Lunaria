@@ -12,7 +12,6 @@ local game = Game:new()
 
 function love.update(dt)
 	local key = love_input.get_key()
-	if not key then return end
 
 	local action = nil
 
@@ -23,6 +22,13 @@ function love.update(dt)
 		action = combat_input.get_action(key)
 	end
 
+	-- transitions update continuously
+	if game.state:is("transition") then
+		game:update(nil)
+		return
+	end
+
+	-- gameplay updates remain turn-based
 	if action then
 		game:update(action)
 	end
