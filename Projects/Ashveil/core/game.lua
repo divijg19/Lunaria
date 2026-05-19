@@ -24,6 +24,8 @@ function Game:new()
 
 		enemies = {},
 
+		props = {},
+
 		state = State:new("explore"),
 
 		camera = Camera:new(),
@@ -46,6 +48,34 @@ function Game:new()
 			y = room.y,
 			hp = 3,
 		})
+	end
+
+	-- place environmental props
+	for i = 2, #rooms do
+		local room = rooms[i]
+
+		local count = love.math.random(1, 3)
+
+		for _ = 1, count do
+			local px =
+				love.math.random(
+					room.x - 2,
+					room.x + 2
+				)
+
+			local py =
+				love.math.random(
+					room.y - 2,
+					room.y + 2
+				)
+
+			table.insert(obj.props, {
+				x = px,
+				y = py,
+
+				type = "pillar",
+			})
+		end
 	end
 
 	setmetatable(obj, self)
@@ -252,6 +282,7 @@ function Game:get_draw_data()
 
 		player = self.player,
 		enemies = self.enemies,
+		props = self.props,
 
 		camera = self.camera,
 

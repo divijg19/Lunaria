@@ -87,6 +87,20 @@ function M.draw(state)
 		end
 	end
 
+	-- props
+	for _, p in ipairs(state.props or {}) do
+		table.insert(queue, {
+			type = "prop",
+
+			x = p.x,
+			y = p.y,
+
+			prop = p,
+
+			depth = p.x + p.y + 0.25
+		})
+	end
+
 	-- enemies
 	for _, e in ipairs(state.enemies or {}) do
 		table.insert(queue, {
@@ -117,6 +131,26 @@ function M.draw(state)
 
 		elseif item.type == "wall" then
 			draw_wall(state, item.x, item.y)
+
+		elseif item.type == "prop" then
+			local sx, sy =
+				world_to_camera(
+					state,
+					item.x,
+					item.y
+				)
+
+			if item.prop.type == "pillar" then
+				love.graphics.rectangle(
+					"fill",
+
+					sx - 6,
+					sy - 18,
+
+					12,
+					24
+				)
+			end
 
 		elseif item.type == "enemy" then
 			local sx, sy =

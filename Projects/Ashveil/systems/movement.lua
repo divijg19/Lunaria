@@ -1,5 +1,15 @@
 local M = {}
 
+local function blocked_by_prop(game, x, y)
+	for _, p in ipairs(game.props or {}) do
+		if p.x == x and p.y == y then
+			return true
+		end
+	end
+
+	return false
+end
+
 function M.player(game, action)
 	if not action then
 		return
@@ -25,6 +35,10 @@ function M.player(game, action)
 		return
 	end
 
+	if blocked_by_prop(game, nx, ny) then
+		return
+	end
+
 	return nx, ny
 end
 
@@ -41,6 +55,10 @@ function M.enemy(game, e)
 	local ny = e.y + d[2]
 
 	if not (game.map[ny] and game.map[ny][nx] ~= "#") then
+		return
+	end
+
+	if blocked_by_prop(game, nx, ny) then
 		return
 	end
 
