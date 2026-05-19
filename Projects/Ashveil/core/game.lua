@@ -11,10 +11,11 @@ local Game = {}
 function Game:new()
 	local map, rooms = Map.create(40, 40)
 
-	local spawn = rooms[1]
+	local spawn = rooms[1].center
 
 	local obj = {
 		map = map,
+		rooms = rooms,
 
 		player = {
 			x = spawn.x,
@@ -44,37 +45,183 @@ function Game:new()
 		local room = rooms[i]
 
 		table.insert(obj.enemies, {
-			x = room.x,
-			y = room.y,
+			x = room.center.x,
+			y = room.center.y,
 			hp = 3,
 		})
 	end
 
-	-- place environmental props
+	-- ========================================
+	-- Environmental Prop Placement
+	-- ========================================
+
 	for i = 2, #rooms do
 		local room = rooms[i]
 
-		local count = love.math.random(1, 3)
+		local prop_count = 0
 
-		for _ = 1, count do
-			local px =
-				love.math.random(
-					room.x - 2,
-					room.x + 2
-				)
+		-- archetype density rules
+		if room.type == "quiet" then
+			prop_count = 0
 
-			local py =
-				love.math.random(
-					room.y - 2,
-					room.y + 2
-				)
+		elseif room.type == "hall" then
+			prop_count = 0
 
-			table.insert(obj.props, {
-				x = px,
-				y = py,
+		elseif room.type == "shrine" then
+			prop_count = 4
 
-				type = "pillar",
-			})
+		elseif room.type == "crypt" then
+			prop_count =
+				love.math.random(6, 10)
+
+		elseif room.type == "ruin" then
+			prop_count =
+				love.math.random(3, 7)
+
+		elseif room.type == "arena" then
+			prop_count =
+				love.math.random(0, 1)
+		end
+
+		-- ====================================
+		-- Shrine Layout
+		-- ====================================
+
+		if room.type == "shrine" then
+			local cx = room.center.x
+			local cy = room.center.y
+
+			local positions = {
+				{cx - 2, cy - 2},
+				{cx + 2, cy - 2},
+				{cx - 2, cy + 2},
+				{cx + 2, cy + 2},
+			}
+
+			for _, pos in ipairs(positions) do
+				table.insert(obj.props, {
+					x = pos[1],
+					y = pos[2],
+
+					type = "pillar",
+				})
+			end
+
+		-- ====================================
+		-- Arena Layout
+		-- ====================================
+
+		elseif room.type == "arena" then
+			for _ = 1, prop_count do
+				local edge = love.math.random(4)
+
+				local px, py
+
+				if edge == 1 then
+					px =
+						love.math.random(
+							room.x,
+							room.x + room.w - 1
+						)
+
+					py = room.y
+
+				elseif edge == 2 then
+					px =
+						love.math.random(
+							room.x,
+							room.x + room.w - 1
+						)
+
+					py = room.y + room.h - 1
+
+				elseif edge == 3 then
+					px = room.x
+
+					py =
+						love.math.random(
+							room.y,
+							room.y + room.h - 1
+						)
+
+				else
+					px = room.x + room.w - 1
+
+					py =
+						love.math.random(
+							room.y,
+							room.y + room.h - 1
+						)
+				end
+
+				table.insert(obj.props, {
+					x = px,
+					y = py,
+
+					type = "pillar",
+				})
+			end
+
+		-- ====================================
+		-- Generic Layouts
+		-- ====================================
+
+		else
+			for _ = 1, prop_count do
+				local px
+				local py
+
+				-- fragmented ruin placement
+				if room.type == "ruin" then
+					if love.math.random() < 0.5 then
+						px =
+							love.math.random(
+								room.x,
+								room.x + math.floor(room.w / 2)
+							)
+					else
+						px =
+							love.math.random(
+								room.x + math.floor(room.w / 2),
+								room.x + room.w - 1
+							)
+					end
+
+					if love.math.random() < 0.5 then
+						py =
+							love.math.random(
+								room.y,
+								room.y + math.floor(room.h / 2)
+							)
+					else
+						py =
+							love.math.random(
+								room.y + math.floor(room.h / 2),
+								room.y + room.h - 1
+							)
+					end
+
+				else
+					px =
+						love.math.random(
+							room.x + 1,
+							room.x + room.w - 2
+						)
+
+					py =
+						love.math.random(
+							room.y + 1,
+							room.y + room.h - 2
+						)
+				end
+
+				table.insert(obj.props, {
+					x = px,
+					y = py,
+
+					type = "pillar",
+				})
+			end
 		end
 	end
 
@@ -93,10 +240,8 @@ function Game:update(action)
 
 	if self.state:is("explore") then
 		self:update_explore(action)
-
 	elseif self.state:is("transition") then
 		self:update_transition()
-
 	elseif self.state:is("combat") then
 		self:update_combat(action)
 	end
@@ -144,7 +289,6 @@ function Game:world_turn()
 
 		if e.hp <= 0 then
 			table.remove(self.enemies, i)
-
 		else
 			local before_hp = self.player.hp
 
@@ -185,10 +329,7 @@ function Game:update_transition()
 
 	t.timer = t.timer + (1 / 60)
 
-	t.alpha = math.min(
-		t.timer / t.duration,
-		1
-	)
+	t.alpha = math.min(t.timer / t.duration, 1)
 
 	if t.timer >= t.duration then
 		self.transition = nil
@@ -231,13 +372,10 @@ function Game:update_combat(action)
 			self.log = "You were slain."
 			return
 		end
-
 	elseif action == "guard" then
 		self.log = "You brace for impact."
-
 	elseif action == "skill" then
 		self.log = "No skills learned yet."
-
 	elseif action == "flee" then
 		self:exit_combat(false)
 		self.log = "You fled the encounter."
@@ -279,6 +417,7 @@ end
 function Game:get_draw_data()
 	return {
 		map = self.map,
+		rooms = self.rooms,
 
 		player = self.player,
 		enemies = self.enemies,
