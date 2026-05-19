@@ -3,8 +3,8 @@ local M = {}
 local TILE_WIDTH = 64
 local TILE_HEIGHT = 32
 
-local ORIGIN_X = 400
-local ORIGIN_Y = 120
+local SCREEN_CENTER_X = 640
+local SCREEN_CENTER_Y = 180
 
 -- ========================================
 -- Helpers
@@ -14,11 +14,25 @@ local function iso_to_screen(x, y)
 	local sx = (x - y) * (TILE_WIDTH / 2)
 	local sy = (x + y) * (TILE_HEIGHT / 2)
 
-	return sx + ORIGIN_X, sy + ORIGIN_Y
+	return sx, sy
 end
 
-local function draw_floor(x, y)
+local function world_to_camera(state, x, y)
 	local sx, sy = iso_to_screen(x, y)
+
+	local cam_sx, cam_sy =
+		iso_to_screen(
+			state.camera.x,
+			state.camera.y
+		)
+
+	return
+		sx - cam_sx + SCREEN_CENTER_X,
+		sy - cam_sy + SCREEN_CENTER_Y
+end
+
+local function draw_floor(state, x, y)
+	local sx, sy = world_to_camera(state, x, y)
 
 	love.graphics.polygon(
 		"line",
@@ -29,8 +43,8 @@ local function draw_floor(x, y)
 	)
 end
 
-local function draw_wall(x, y)
-	local sx, sy = iso_to_screen(x, y)
+local function draw_wall(state, x, y)
+	local sx, sy = world_to_camera(state, x, y)
 
 	love.graphics.polygon(
 		"fill",
@@ -46,9 +60,15 @@ end
 -- ========================================
 
 function M.draw(state)
+	-- update camera
+	state.camera:center_on(
+		state.player.x,
+		state.player.y
+	)
+
 	local queue = {}
 
-	-- map tiles
+	-- map
 	for y, row in ipairs(state.map) do
 		for x, tile in ipairs(row) do
 			table.insert(queue, {
@@ -83,16 +103,21 @@ function M.draw(state)
 		return a.depth < b.depth
 	end)
 
-	-- render sorted
+	-- render
 	for _, item in ipairs(queue) do
 		if item.type == "floor" then
-			draw_floor(item.x, item.y)
+			draw_floor(state, item.x, item.y)
 
 		elseif item.type == "wall" then
-			draw_wall(item.x, item.y)
+			draw_wall(state, item.x, item.y)
 
 		elseif item.type == "enemy" then
-			local sx, sy = iso_to_screen(item.x, item.y)
+			local sx, sy =
+				world_to_camera(
+					state,
+					item.x,
+					item.y
+				)
 
 			love.graphics.print(
 				"E",
@@ -101,7 +126,12 @@ function M.draw(state)
 			)
 
 		elseif item.type == "player" then
-			local sx, sy = iso_to_screen(item.x, item.y)
+			local sx, sy =
+				world_to_camera(
+					state,
+					item.x,
+					item.y
+				)
 
 			love.graphics.print(
 				"@",

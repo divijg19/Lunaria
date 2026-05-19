@@ -1,5 +1,6 @@
 local Map = require("core.map")
 local State = require("core.state")
+local Camera = require("core.camera")
 
 local movement = require("systems.movement")
 local combat_system = require("systems.combat")
@@ -23,6 +24,8 @@ function Game:new()
 		},
 
 		state = State:new("explore"),
+
+		camera = Camera:new(),
 
 		combat = nil,
 
@@ -200,6 +203,8 @@ function Game:get_draw_data()
 
 		player = self.player,
 		enemies = self.enemies,
+
+		camera = self.camera,
 
 		combat = self.combat,
 
