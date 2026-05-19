@@ -29,6 +29,8 @@ function Game:new()
 
 		combat = nil,
 
+		transition = nil,
+
 		log = "Welcome to Ashveil.",
 
 		is_game_over = false,
@@ -49,6 +51,9 @@ function Game:update(action)
 
 	if self.state:is("explore") then
 		self:update_explore(action)
+
+	elseif self.state:is("transition") then
+		self:update_transition()
 
 	elseif self.state:is("combat") then
 		self:update_combat(action)
@@ -115,16 +120,48 @@ end
 -- =========================
 
 function Game:start_combat(enemy)
-	self.state:set("combat")
+	self.state:set("transition")
 
-	self.combat = {
+	self.transition = {
+		timer = 0,
+		duration = 0.6,
+
+		alpha = 0,
+
 		enemy = enemy,
-
-		player_hp = self.player.hp,
-		enemy_hp = enemy.hp,
 	}
 
-	self.log = "A Veilbeast approaches."
+	self.log = "A Veil stirs..."
+end
+
+function Game:update_transition()
+	local t = self.transition
+
+	if not t then
+		return
+	end
+
+	t.timer = t.timer + (1 / 60)
+
+	t.alpha = math.min(
+		t.timer / t.duration,
+		1
+	)
+
+	if t.timer >= t.duration then
+		self.transition = nil
+
+		self.state:set("combat")
+
+		self.combat = {
+			enemy = t.enemy,
+
+			player_hp = self.player.hp,
+			enemy_hp = t.enemy.hp,
+		}
+
+		self.log = "The battle begins."
+	end
 end
 
 function Game:update_combat(action)
@@ -207,6 +244,8 @@ function Game:get_draw_data()
 		camera = self.camera,
 
 		combat = self.combat,
+
+		transition = self.transition,
 
 		log = self.log,
 
