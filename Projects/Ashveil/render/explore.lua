@@ -3,8 +3,13 @@ local M = {}
 local TILE_WIDTH = 64
 local TILE_HEIGHT = 32
 
-local SCREEN_CENTER_X = 640
-local SCREEN_CENTER_Y = 180
+local function get_screen_center()
+	local w = love.graphics.getWidth()
+	local h = love.graphics.getHeight()
+
+	-- slightly below center feels better
+	return w / 2, h / 3
+end
 
 -- ========================================
 -- Helpers
@@ -26,9 +31,11 @@ local function world_to_camera(state, x, y)
 			state.camera.y
 		)
 
+	local cx, cy = get_screen_center()
+
 	return
-		sx - cam_sx + SCREEN_CENTER_X,
-		sy - cam_sy + SCREEN_CENTER_Y
+		sx - cam_sx + cx,
+		sy - cam_sy + cy
 end
 
 local function draw_floor(state, x, y)
