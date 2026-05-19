@@ -46,40 +46,69 @@ end
 -- ========================================
 
 function M.draw(state)
-	-- draw map
+	local queue = {}
+
+	-- map tiles
 	for y, row in ipairs(state.map) do
 		for x, tile in ipairs(row) do
-			if tile == "#" then
-				draw_wall(x, y)
-			else
-				draw_floor(x, y)
-			end
+			table.insert(queue, {
+				type = tile == "#" and "wall" or "floor",
+				x = x,
+				y = y,
+				depth = x + y
+			})
 		end
 	end
 
-	-- draw enemies
+	-- enemies
 	for _, e in ipairs(state.enemies or {}) do
-		local sx, sy = iso_to_screen(e.x, e.y)
-
-		love.graphics.print(
-			"E",
-			sx - 4,
-			sy
-		)
+		table.insert(queue, {
+			type = "enemy",
+			x = e.x,
+			y = e.y,
+			depth = e.x + e.y + 0.5
+		})
 	end
 
-	-- draw player
-	do
-		local sx, sy = iso_to_screen(
-			state.player.x,
-			state.player.y
-		)
+	-- player
+	table.insert(queue, {
+		type = "player",
+		x = state.player.x,
+		y = state.player.y,
+		depth = state.player.x + state.player.y + 0.5
+	})
 
-		love.graphics.print(
-			"@",
-			sx - 4,
-			sy
-		)
+	-- depth sort
+	table.sort(queue, function(a, b)
+		return a.depth < b.depth
+	end)
+
+	-- render sorted
+	for _, item in ipairs(queue) do
+		if item.type == "floor" then
+			draw_floor(item.x, item.y)
+
+		elseif item.type == "wall" then
+			draw_wall(item.x, item.y)
+
+		elseif item.type == "enemy" then
+			local sx, sy = iso_to_screen(item.x, item.y)
+
+			love.graphics.print(
+				"E",
+				sx - 4,
+				sy
+			)
+
+		elseif item.type == "player" then
+			local sx, sy = iso_to_screen(item.x, item.y)
+
+			love.graphics.print(
+				"@",
+				sx - 4,
+				sy
+			)
+		end
 	end
 
 	-- UI
